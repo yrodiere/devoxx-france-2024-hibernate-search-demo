@@ -1,0 +1,126 @@
+services:
+  hsearch-quarkus:
+    image: quarkus/hsearch-quarkus:latest
+    depends_on:
+      pg01:
+        condition: service_healthy
+      es01:
+        condition: service_healthy
+      es02:
+        condition: service_healthy
+    environment:
+      - POSTGRES_HOST=pg01
+      - POSTGRES_DB=hsearch_demo
+      - POSTGRES_USER=hsearch_demo
+      - POSTGRES_PASSWORD=hsearch_demo
+      - ES_HOSTS=es01:9200,es02:9200
+      - ES_PROTOCOL=http
+    ports:
+      - 8080:8080
+    networks:
+      - pgnet
+      - esnet
+  pg01:
+    image: postgres:15.2
+    environment:
+      - POSTGRES_USER=hsearch_demo
+      - POSTGRES_PASSWORD=hsearch_demo
+      - POSTGRES_DB=hsearch_demo
+    ports:
+      - 5432:5432
+    volumes:
+      - pgdata01:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "bash", "-c", "psql -U hsearch_demo hsearch_demo"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      pgnet:
+        aliases:
+          - pg01
+  es01:
+    image: elastic/elasticsearch:8.9.0
+    environment:
+      - node.name=es01
+      - discovery.seed_hosts=es02
+      - cluster.initial_master_nodes=es01,es02
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      # Self-signed certificates really aren't practical to work with, so we disable that.
+      - xpack.security.enabled=false
+      # Disable disk-based shard allocation thresholds: on large, relatively full disks (>90% used),
+      # it will lead to index creation to get stuck waiting for other nodes to join the cluster,
+      # which will never happen since we only have one node.
+      # See https://www.elastic.co/guide/en/elasticsearch/reference/8.9/modules-cluster.html#disk-based-shard-allocation
+      - cluster.routing.allocation.disk.threshold_enabled=false
+    ports:
+      - 9200:9200
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - esdata01:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      esnet:
+        aliases:
+          - es01
+  es02:
+    image: elastic/elasticsearch:8.9.0
+    environment:
+      - node.name=es02
+      - discovery.seed_hosts=es01
+      - cluster.initial_master_nodes=es01,es02
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      # Self-signed certificates really aren't practical to work with, so we disable that.
+      - xpack.security.enabled=false
+      # Disable disk-based shard allocation thresholds: on large, relatively full disks (>90% used),
+      # it will lead to index creation to get stuck waiting for other nodes to join the cluster,
+      # which will never happen since we only have one node.
+      # See https://www.elastic.co/guide/en/elasticsearch/reference/8.9/modules-cluster.html#disk-based-shard-allocation
+      - cluster.routing.allocation.disk.threshold_enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - esdata02:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      esnet:
+        aliases:
+          - es02
+
+volumes:
+  pgdata01:
+    driver: local
+  esdata01:
+    driver: local
+  esdata02:
+    driver: local
+
+networks:
+  esnet:
+  pgnet:
