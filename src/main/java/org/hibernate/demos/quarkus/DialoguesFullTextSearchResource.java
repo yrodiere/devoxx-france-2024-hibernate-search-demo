@@ -31,6 +31,10 @@ public class DialoguesFullTextSearchResource {
 	@GET
 	@Path("search-full-text")
 	public List<DialogueDto> search(@QueryParam("term") String term) {
+		if (term == null || term.isEmpty()) {
+			return List.of();
+		}
+
 		List<Dialogue> result = searchSession.search( Dialogue.class )
 				.where( f ->
 						f.match()
@@ -41,7 +45,3 @@ public class DialoguesFullTextSearchResource {
 		return result.stream().map( mapper::toDto ).collect( Collectors.toList() );
 	}
 }
-//http://localhost:8080/search-full-text?term=Something%20to%20say%20hello
-//http://localhost:8080/search-knn?term=Something%20to%20say%20hello
-//http://localhost:8080/search-full-text?term=dialogue%20that%20looks%20like%20saying%20hi
-//http://localhost:8080/search-knn?term=dialogue%20that%20looks%20like%20saying%20hi

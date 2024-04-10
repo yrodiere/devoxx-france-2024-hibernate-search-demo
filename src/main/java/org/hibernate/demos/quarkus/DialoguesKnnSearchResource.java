@@ -35,6 +35,10 @@ public class DialoguesKnnSearchResource {
 	@GET
 	@Path("search-knn")
 	public List<DialogueDto> searchKnn(@QueryParam("term") String term) {
+		if (term == null || term.isEmpty()) {
+			return List.of();
+		}
+
 		List<Dialogue> result = searchSession.search( Dialogue.class )
 				.where( f ->
 						f.knn( 5 ).field( "embedding" )

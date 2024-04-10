@@ -35,6 +35,10 @@ public class DialoguesResource {
 	@Path("create")
 	@Transactional
 	public String dialogue(@QueryParam("id") Long characterId, @QueryParam("content") String content) {
+		if (characterId == null || content == null) {
+			return "id and content query parameters";
+		}
+
 		Dialogue dialogue = new Dialogue();
 		dialogue.character = Character.findById(characterId);
 		dialogue.text = content;
@@ -64,7 +68,3 @@ public class DialoguesResource {
 		}
 	}
 }
-//http://localhost:8080/search-full-text?term=Something%20to%20say%20hello
-//http://localhost:8080/search-knn?term=Something%20to%20say%20hello
-//http://localhost:8080/search-full-text?term=dialogue%20that%20looks%20like%20saying%20hi
-//http://localhost:8080/search-knn?term=dialogue%20that%20looks%20like%20saying%20hi

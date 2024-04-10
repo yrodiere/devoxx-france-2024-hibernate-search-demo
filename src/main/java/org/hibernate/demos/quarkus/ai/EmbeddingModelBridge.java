@@ -27,9 +27,4 @@ public class EmbeddingModelBridge implements ValueBridge<String, float[]> {
       Embedding embedding = embeddingModel.embed(segment.text()).content();
       return embedding.vector();
    }
-//   @VectorField(name = "embedding",
-//           dimension = EmbeddingModelBridge.DIMENSION,
-//           vectorSimilarity = VectorSimilarity.COSINE,
-//           valueBridge = @ValueBridgeRef(type = EmbeddingModelBridge.class))
-
 }
