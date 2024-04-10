@@ -23,9 +23,9 @@ public class Dialogue extends PanacheEntity {
 
    @FullTextField(analyzer = "english")
    @VectorField(name = "embedding",
-         dimension = EmbeddingModelBridge.DIMENSION,
-         vectorSimilarity = VectorSimilarity.COSINE,
-         valueBridge = @ValueBridgeRef(type = EmbeddingModelBridge.class))
+           dimension = EmbeddingModelBridge.DIMENSION,
+           vectorSimilarity = VectorSimilarity.COSINE,
+           valueBridge = @ValueBridgeRef(type = EmbeddingModelBridge.class))
    @Column(length = Length.LONG)
    public String text;
 }

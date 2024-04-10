@@ -1,5 +1,6 @@
 package org.hibernate.demos.quarkus;
 
+import io.quarkus.narayana.jta.QuarkusTransaction;
 import io.quarkus.runtime.StartupEvent;
 import io.quarkus.runtime.configuration.ProfileManager;
 import jakarta.enterprise.event.Observes;
@@ -9,20 +10,14 @@ import jakarta.transaction.Transactional.TxType;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
-import org.hibernate.demos.quarkus.ai.EmbeddingModelBridge;
 import org.hibernate.demos.quarkus.domain.Character;
 import org.hibernate.demos.quarkus.domain.Dialogue;
-import org.hibernate.demos.quarkus.dto.DialogueDto;
-import org.hibernate.demos.quarkus.dto.DialogueMapper;
+import org.hibernate.search.engine.search.predicate.dsl.SearchPredicateFactory;
 import org.hibernate.search.mapper.orm.mapping.SearchMapping;
 import org.hibernate.search.mapper.orm.session.SearchSession;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Path("/")
 @Transactional
@@ -31,31 +26,24 @@ import java.util.stream.Collectors;
 public class DialoguesResource {
 
 	@Inject
-	DialogueMapper mapper;
-
-	@Inject
 	SearchMapping searchMapping;
 
 	@Inject
 	SearchSession searchSession;
 
-	@Inject
-	EmbeddingModelBridge bridge;
-
 	@GET
-	@Path("/character/{id}")
-	public Character character(@PathParam("id") Long id) {
-		return Character.findById(id);
+	@Path("create")
+	@Transactional
+	public String dialogue(@QueryParam("id") Long characterId, @QueryParam("content") String content) {
+		Dialogue dialogue = new Dialogue();
+		dialogue.character = Character.findById(characterId);
+		dialogue.text = content;
+		dialogue.persist();
+		return "created";
 	}
 
 	@GET
-	@Path("/dialogue/{id}")
-	public Dialogue dialogue(@PathParam("id") Long id) {
-		return Dialogue.findById(id);
-	}
-
-	@GET
-	@Path("/reindex")
+	@Path("reindex")
 	@Transactional(TxType.NEVER)
 	public void reindex() throws InterruptedException {
 		searchMapping.scope( Dialogue.class )
@@ -66,50 +54,17 @@ public class DialoguesResource {
 	@Transactional(TxType.NEVER)
 	void reindexOnStart(@Observes StartupEvent event) throws InterruptedException {
 		if ( "dev".equals( ProfileManager.getActiveProfile() ) ) {
-			reindex();
+			Long indexSize = QuarkusTransaction.requiringNew()
+					.call(searchSession.search(Dialogue.class)
+							.where(SearchPredicateFactory::matchAll)::fetchTotalHitCount);
+
+			if (indexSize == null || indexSize == 0) {
+				reindex();
+			}
 		}
 	}
-
-	@GET
-	@Path("/search-full-text")
-	public List<DialogueDto> search(@QueryParam("term") String term) {
-		List<Dialogue> result = searchSession.search( Dialogue.class )
-				.where( f ->
-						f.match()
-								.field( "text" )
-								.matching( term )
-				)
-				.fetchHits( 5 );
-		return result.stream().map( mapper::toDto ).collect( Collectors.toList() );
-	}
-
-	@GET
-	@Path("/search-hybrid")
-	public List<DialogueDto> searchHybrid(@QueryParam("term") String term) {
-		List<Dialogue> result = searchSession.search( Dialogue.class )
-				.where( f -> f.or(
-						f.match()
-								.field( "text" )
-								.matching( term ),
-						f.knn( 10 ).field( "embedding" )
-								.matching( bridge.toEmbedding(term) )
-								.boost( 1.0f )
-					)
-				)
-				.fetchHits( 5 );
-		return result.stream().map( mapper::toDto ).collect( Collectors.toList() );
-	}
-
-	@GET
-	@Path("/search-knn")
-	public List<DialogueDto> searchKnn(@QueryParam("term") String term) {
-		List<Dialogue> result = searchSession.search( Dialogue.class )
-				.where( f -> f.knn( 10 ).field( "embedding" )
-								.matching( bridge.toEmbedding(term) )
-								.boost( 1.0f )
-				)
-				.fetchHits( 5 );
-		return result.stream().map( mapper::toDto ).collect( Collectors.toList() );
-	}
-
 }
+//http://localhost:8080/search-full-text?term=Something%20to%20say%20hello
+//http://localhost:8080/search-knn?term=Something%20to%20say%20hello
+//http://localhost:8080/search-full-text?term=dialogue%20that%20looks%20like%20saying%20hi
+//http://localhost:8080/search-knn?term=dialogue%20that%20looks%20like%20saying%20hi

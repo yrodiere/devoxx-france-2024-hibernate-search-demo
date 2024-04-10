@@ -2165,3 +2165,5 @@ INSERT INTO dialogue(id, character_id, text) VALUES(1997,16,'Don`t say his name.
 INSERT INTO dialogue(id, character_id, text) VALUES(1998,1,'Sorry.');
 INSERT INTO dialogue(id, character_id, text) VALUES(1999,16,'When you stopped You-Know-Who... Black lost everything. But to this day, he still remains a faithful servant. And in his mind... you are the only thing that stands in the way... of You-Know-Who returning to power. And that is why... he has escaped from Azkaban. To find you.');
 INSERT INTO dialogue(id, character_id, text) VALUES(2000,1,'And kill me.');
+
+ALTER SEQUENCE dialogue_seq RESTART WITH 2001;

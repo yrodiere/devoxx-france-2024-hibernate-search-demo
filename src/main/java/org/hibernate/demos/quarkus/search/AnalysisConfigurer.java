@@ -6,7 +6,7 @@ import org.hibernate.search.backend.elasticsearch.analysis.ElasticsearchAnalysis
 import io.quarkus.hibernate.search.orm.elasticsearch.SearchExtension;
 
 @SearchExtension
-public class ClientElasticsearchAnalysisConfigurer implements ElasticsearchAnalysisConfigurer {
+public class AnalysisConfigurer implements ElasticsearchAnalysisConfigurer {
 	@Override
 	public void configure(ElasticsearchAnalysisConfigurationContext context) {
 		context.analyzer( "english" ).custom()
