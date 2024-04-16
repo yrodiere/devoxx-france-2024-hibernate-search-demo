@@ -17,11 +17,11 @@ import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmb
 @Indexed
 public class Dialogue extends PanacheEntity {
 
-   @ManyToOne
-   @IndexedEmbedded
-   public Character character;
-
    @FullTextField(analyzer = "english")
    @Column(length = Length.LONG)
    public String text;
+
+   @ManyToOne
+   @IndexedEmbedded
+   public Character character;
 }

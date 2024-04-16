@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity(name = "character_movie")
-@Indexed
 public class Character extends PanacheEntity {
    @FullTextField(analyzer = "english")
    public String name;
