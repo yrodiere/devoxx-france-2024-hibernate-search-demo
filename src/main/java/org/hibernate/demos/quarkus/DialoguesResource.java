@@ -13,7 +13,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
-import org.hibernate.demos.quarkus.domain.Character;
+import org.hibernate.demos.quarkus.domain.Person;
 import org.hibernate.demos.quarkus.domain.Dialogue;
 import org.hibernate.search.engine.search.predicate.dsl.SearchPredicateFactory;
 import org.hibernate.search.mapper.orm.mapping.SearchMapping;
@@ -40,7 +40,7 @@ public class DialoguesResource {
 		}
 
 		Dialogue dialogue = new Dialogue();
-		dialogue.character = Character.findById(characterId);
+		dialogue.character = Person.findById(characterId);
 		dialogue.text = content;
 		dialogue.persist();
 		return "created";

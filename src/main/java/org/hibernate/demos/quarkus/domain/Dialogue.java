@@ -1,8 +1,4 @@
 package org.hibernate.demos.quarkus.domain;
-import org.hibernate.demos.quarkus.ai.EmbeddingModelBridge;
-import org.hibernate.search.engine.backend.types.VectorSimilarity;
-import org.hibernate.search.mapper.pojo.bridge.mapping.annotation.ValueBridgeRef;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.VectorField;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -23,5 +19,5 @@ public class Dialogue extends PanacheEntity {
 
    @ManyToOne
    @IndexedEmbedded
-   public Character character;
+   public Person character;
 }
