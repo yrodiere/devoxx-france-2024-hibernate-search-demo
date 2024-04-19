@@ -40,11 +40,9 @@ public class DialoguesKnnSearchResource {
 		}
 
 		List<Dialogue> result = searchSession.search( Dialogue.class )
-				.where( f ->
-						f.knn( 5 ).field( "embedding" )
+				.where( f -> f.knn( 5 ).field( "embedding" )
 						.matching( bridge.toEmbedding(term) )
-						.boost( 1.0f )
-				)
+						.boost( 1.0f ))
 				.fetchHits( 5 );
 		return result.stream().map( mapper::toDto ).collect( Collectors.toList() );
 	}

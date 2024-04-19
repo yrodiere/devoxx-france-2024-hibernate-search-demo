@@ -36,11 +36,9 @@ public class DialoguesFullTextSearchResource {
 		}
 
 		List<Dialogue> result = searchSession.search( Dialogue.class )
-				.where( f ->
-						f.match()
+				.where( f -> f.match()
 								.fields( "text", "character.name" )
-								.matching( term )
-				)
+								.matching( term ))
 				.fetchHits( 5 );
 		return result.stream().map( mapper::toDto ).collect( Collectors.toList() );
 	}
